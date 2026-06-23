@@ -16,4 +16,4 @@ class RotationalDynamics:
         H = self.inertia_tensor @ omega
         omega_dot = self.inertia_tensor_inv @ (torque - np.cross( omega, H))
 
-        return omega_dot_value
+        return omega_dot
