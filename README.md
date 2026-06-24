@@ -12,10 +12,10 @@ Current Progress:
 - Quaternion inverse
 - Euler ↔ Quaternion conversion
 - Quaternion → Rotation Matrix conversion
-
-Upcoming:
 - Quaternion propagation
 - Rotational kinematics
 - Rigid body dynamics
+
+Upcoming:
 - Reaction wheel modeling
 - PID control
