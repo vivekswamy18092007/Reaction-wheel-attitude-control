@@ -19,3 +19,6 @@ Current Progress:
 Upcoming:
 - Reaction wheel modeling
 - PID control
+
+CODE ARCHITECTURE
+- Pre-MidEvaluation: https://premidevalarchitecture.netlify.app/
