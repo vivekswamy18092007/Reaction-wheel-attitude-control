@@ -102,6 +102,62 @@ class Quaternion:
 
         return Quaternion(w, x, y, z)
     
+    # Quaternion to Rotation matrix conversion
+
+    def to_rotation_matrix(self):
+
+        w, x, y, z = self.q
+
+        R = np.array([
+
+            [
+                1 - 2*(y*y + z*z),
+                2*(x*y - z*w),
+                2*(x*z + y*w)
+            ],
+
+            [
+                2*(x*y + z*w),
+                1 - 2*(x*x + z*z),
+                2*(y*z - x*w)
+            ],
+
+            [
+                2*(x*z - y*w),
+                2*(y*z + x*w),
+                1 - 2*(x*x + y*y)
+            ]
+
+        ])
+
+        return R
+
+
+
+    # Error Quaternion between two quaternions
+
+    def error_quaternion(self, q_target):
+
+        q_target_inv = q_target.inverse()
+        q_error = q_target_inv * self
+        return q_error.normalize()
+
+
+    # Extracting the vector part of a quaternion
+
+    def vector_part(self):
+        return self.q[1:]
+
+
+
+
+    # Extracting the scalar part of a quaternion
+    def scalar_part(self):
+        return self.q[0]
+
+
+
+    
 # Euler angles to Quaternion conversion
 
 
@@ -159,34 +215,4 @@ q = euler_to_quaternion(
     pitch,
     yaw
 )
-
-# Quaternion to Rotation matrix conversion
-
-def to_rotation_matrix(self):
-
-    w, x, y, z = self.q
-
-    R = np.array([
-
-        [
-            1 - 2*(y*y + z*z),
-            2*(x*y - z*w),
-            2*(x*z + y*w)
-        ],
-
-        [
-            2*(x*y + z*w),
-            1 - 2*(x*x + z*z),
-            2*(y*z - x*w)
-        ],
-
-        [
-            2*(x*z - y*w),
-            2*(y*z + x*w),
-            1 - 2*(x*x + y*y)
-        ]
-
-    ])
-
-    return R
 
