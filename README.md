@@ -22,3 +22,6 @@ Upcoming:
 
 CODE ARCHITECTURE
 - Pre-MidEvaluation: https://premidevalarchitecture.netlify.app/
+
+CAD TRACK
+- For the CAD Track: https://github.com/tulikachaudhury/Attitude-Control-of-a-Cubesat-Satellite-with-Reaction-Wheels-CAD-track-
