@@ -1,6 +1,6 @@
 import numpy as np
-from QuaternionKinematics import QuaternionKinematics
-from RotationalDynamics import RotationalDynamics
+from kinematics import QuaternionKinematics
+from rigid_body import RotationalDynamics
 
 
 class AttitudeSimulator:
