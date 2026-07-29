@@ -1,0 +1,35 @@
+# =============================================================================
+# _base.yaml -- spacecraft + hardware, inherited by every scenario/controller
+# combination via sim.config.compose_config(base, scenario, controller).
+#
+# Traces to src/deimos/constants.py -- if you change the spacecraft, change
+# constants.py and mirror the numbers here (config_loader has no way to read
+# Python constants directly, since YAML is meant to stay hand-editable for
+# quick what-if scenarios without touching code).
+# =============================================================================
+
+satellite:
+  # CAD-extracted, CoM-referenced inertia tensor [kg m^2]. Confirmed
+  # diagonal-dominant (off-diagonal terms ~1e-7 and smaller). Full 9-entry
+  # row-major form: the products of inertia cost nothing to carry and this
+  # way the number in the preset is literally the CAD number.
+  inertia_tensor: [1.4010e-2, 1.598e-7, 3.2e-11,
+                   1.598e-7, 1.4130e-2, 3.1e-11,
+                   3.2e-11,  3.1e-11,  2.9380e-3]
+
+wheels:
+  # 3-wheel orthogonal cone (see actuators/reaction_wheels.py) -- current
+  # design, replacing the earlier 4-wheel pyramid. Numbers are the CAD/
+  # datasheet values for the Maxon ECX Flat 22L, not placeholders.
+  config: cone                   # "pyramid" (4 wheels), "orthogonal" or "cone" (3 wheels)
+  tilt_deg: 32.0                 # only used by "pyramid"; unused by cone (angle is fixed)
+  wheel_inertia: 5.8e-6          # [kg m^2] per wheel, CAD-exported (Al 7075 hub + rim)
+  max_torque: 4.0e-3              # [N m] software torque cap (motor can do ~28.8e-3)
+  max_speed: 1256.6              # [rad/s] 12000 rpm, ECX Flat 22L datasheet
+
+disturbance:
+  enabled: false
+  constant_torque: [0.0, 0.0, 0.0]
+
+sim:
+  dt: 0.01                       # [s] RK4 step size
