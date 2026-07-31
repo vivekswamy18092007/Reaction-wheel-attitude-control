@@ -1,0 +1,11 @@
+controller                         pid_example  wie_eigenaxis
+settling_time_s_mean                 36.969600      18.997240
+settling_time_s_std                   2.765277       1.400155
+control_effort_Nms_mean               0.377765       0.019357
+control_effort_Nms_std                0.102147       0.006401
+sse_deg_mean                          0.469974       0.097320
+sse_deg_std                           0.046441       0.006476
+saturation_fraction_mean              0.259562       0.028435
+saturation_fraction_std               0.064362       0.014630
+mean_eigenaxis_deviation_deg_mean    51.080021       6.595433
+mean_eigenaxis_deviation_deg_std      8.408935       7.976651

@@ -1,0 +1,36 @@
+# Wheel-momentum DESATURATION RECOVERY -- the competition brief's bonus
+# "recover from wheel saturation using an additional actuator type".
+#
+# The wheels start pre-loaded at ~72% of their speed limit (a state a real
+# mission reaches by absorbing secular disturbance torque for days), holding
+# an already-correct attitude. The magnetorquers must bleed the stored
+# momentum back below threshold while the wheels keep the body pointed --
+# watch the `wheel_momentum` and `mtq_dipole` figures (plot group "desat").
+#
+# Physics of the numbers:
+#   * |h_w| starts near 9.0e-3 N m s (3 wheels x 900 rad/s x 5.8e-6 kg m^2,
+#     orthogonal axes) vs a single-wheel capacity of 7.3e-3 -- deep in the
+#     regime where one more slew could pin a wheel.
+#   * MTQ torque is |m x B| <~ 0.2 A m^2 x ~35 uT ~ 7e-6 N m, so dumping
+#     ~8e-3 N m s takes O(1000 s). Hence the long duration and the 0.1 s
+#     step -- nothing in this scenario moves fast, and dt = 0.1 keeps the
+#     run to ~30k RK4 steps.
+#   * Desat stops via the hysteresis latch (actuators/magnetorquers.py) once
+#     |h_w| falls below stop_frac * threshold.
+
+initial:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+  omega: [0.0, 0.0, 0.0]
+  wheel_speeds: [900.0, -900.0, 900.0]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+magnetorquers:
+  enabled: true
+  k_desat: 5.0e-3
+  threshold_frac: 0.3
+
+sim:
+  dt: 0.1
+  duration: 3000.0

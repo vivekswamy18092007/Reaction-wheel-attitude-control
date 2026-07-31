@@ -1,0 +1,10 @@
+
+initial:
+  attitude_rpy_deg: [5.0, 5.0, 5.0]
+  omega: [0.0, 0.0, 0.0]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+sim:
+  duration: 240.0

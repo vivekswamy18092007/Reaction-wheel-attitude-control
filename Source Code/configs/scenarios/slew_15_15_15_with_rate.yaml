@@ -1,0 +1,10 @@
+# A smaller 15/15/15 deg slew starting with nonzero body rates 
+initial:
+  attitude_rpy_deg: [15.0, 15.0, 15.0]
+  omega: [0.01, -0.01, 0.005]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+sim:
+  duration: 60.0

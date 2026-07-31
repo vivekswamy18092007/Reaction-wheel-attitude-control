@@ -1,0 +1,8 @@
+# Hand-tuned in studies/tune_wie_manual.ipynb -- scenario=slew_160_40_30
+controller:
+  type: wie
+  case: eigenaxis
+  zeta: 1
+  settling_time_s: 30
+  decouple_wheel_momentum: true
+  # Ki: none -- base case, per the Sec. III proof

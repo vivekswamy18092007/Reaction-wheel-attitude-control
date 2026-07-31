@@ -1,0 +1,28 @@
+
+
+#SCENARIO B (competition brief): attitude maintenance in the presence of a
+ #constant external disturbance torque.
+
+ #The satellite starts with a small pointing error, recovers it, and must
+ #then HOLD [0,0,0] against a constant body-frame torque for the rest of the
+ #run 
+
+ #Disturbance magnitude: 3e-6 N m per axis is a conservative worst-case
+ #envelope for a 3U CubeSat at 500 km, dominated by the residual magnetic
+ #dipole (0.05 A m^2 residual x ~45 uT field ~ 2.3e-6 N m) with aerodynamic
+ #and SRP torques an order below, and the gravity-gradient bound
+ #(1.5 * n^2 * (Jmax - Jmin) ~ 4.8e-8 N m, dynamics/disturbances.py) 
+
+initial:
+  attitude_rpy_deg: [5.0, 5.0, 5.0]
+  omega: [0.0, 0.0, 0.0]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+disturbance:
+  enabled: true
+  constant_torque: [3.0e-7, 3.0e-7, 3.0e-7]
+
+sim:
+  duration: 240.0

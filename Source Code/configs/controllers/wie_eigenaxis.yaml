@@ -1,0 +1,92 @@
+# Case 1 of Wie/Weiss/Arapostathis (1989): the EIGENAXIS regulator.
+#
+#     u = (omega x J omega) - D omega - s K q_ev,   K = k*J,  D = d*J,  mu = 1
+#
+# mu = 1 cancels the plant's gyroscopic term exactly, and K = k*J, D = d*J
+# then reduce the closed loop to
+#
+#     omega_dot = -d*omega - s*k*q_ev
+#
+# with J absent. All three components of q_ev obey the same scalar
+# second-order equation, so omega stays parallel to the eigenaxis of the
+# initial error quaternion and the spacecraft turns about ONE fixed axis --
+# the shortest angular path between the two attitudes. That is the property
+# this case exists to deliver, and it is a consequence of the K = k*J
+# structure, not of the particular gain values.
+#
+# Trade against configs/controllers/wie_case3.yaml (near_eigenaxis, mu = 0):
+# Case 1 gives the shortest path but needs an accurate J, because the
+# cancellation it relies on is exact only if the controller's J matches the
+# plant's. Cases 2-4 give up some of the path optimality to buy robustness to
+# inertia error. This spacecraft's J is CAD-extracted and confirmed
+# diagonal-dominant, which is what makes Case 1 defensible here.
+#
+# Stability: Sec. III guarantees global asymptotic stability for mu = 1 and
+# ANY K = K^T > 0, D = D^T > 0. Since J is positive definite, every k > 0 and
+# d > 0 qualifies -- there is no gain choice in this family that is unstable.
+
+controller:
+  type: wie
+  case: eigenaxis
+
+  # NOT optional for this case, despite defaulting to false elsewhere.
+  #
+  # The paper assumes an ideal torque actuator, so its plant is
+  # J*omega_dot = u - omega x J*omega and mu = 1 cancels the gyroscopic term
+  # outright. DEIMoS is a momentum-exchange system: the wheels' stored
+  # momentum h_w sits inside that cross product too
+  # (dynamics/rigid_body.py). Cancelling only the body part leaves
+  # -omega x h_w, which is not along the error eigenaxis and grows through
+  # the slew, because h_w is precisely what the wheels accumulate to perform
+  # it.
+  #
+  # Measured on slew_40_30_25 with the gains below: mean eigenaxis deviation
+  # is 3.65 deg without this flag and 0.005 deg with it. Settling time barely
+  # moves either way -- which is exactly why it is worth stating, since the
+  # defining property of this control law fails without ever showing up in
+  # the metric most people look at.
+  decouple_wheel_momentum: true
+
+  # Sized by the large-angle relation t_s = 8/(zeta*omega_n) --
+  # WieRegulator.design() turns (zeta, settling_time_s) into
+  # k = 2*omega_n^2 = 0.320 and d = 2*zeta*omega_n = 0.800.
+  #
+  # zeta = 1.0 (critically damped, no overshoot to pay for on a large slew)
+  # and t_s = 20 s put the peak wheel torque at 3.4e-3 N m (85% of the
+  # 4.0e-3 N m per-wheel cap) on the 40/30/25 slew with the 3U CAD tensor
+  # (measured 2026-07, zero saturated steps) -- the design stays unsaturated
+  # and the eigenaxis property actually holds rather than being clipped away
+  # on the first second of the maneuver. K = k*J tracks constants.py's J
+  # automatically, which is why this preset needed no rescale when the old
+  # placeholder tensor was replaced.
+  #
+  # This preset's real job is to WARM-START the NSGA-II search
+  # (`python overnight_tune.py --type WIE`, see tuning/objectives.py). NSGA-II
+  # is elitist, so seeding it with this design guarantees the returned Pareto
+  # front is never dominated by it: the search can only improve on the
+  # textbook sizing rule, never regress below it.
+  zeta: 1.0
+  settling_time_s: 30.0
+
+  # Ki is deliberately absent from THIS preset -- see wie_eigenaxis_hold.yaml
+  # for the integral-augmented sibling used once the slew has settled.
+  #
+  # Measured directly: adding ANY nonzero Ki here, at any ki/k, monotonically
+  # degrades slew performance. A sweep on slew_160_40_30 (152 deg) --
+  #   ki/k       final err (deg)   overshoot (deg)
+  #   0          0.0018            0.000
+  #   1e-5       0.0093            0.007
+  #   5e-5       0.0456            0.034
+  #   1e-4       0.0907            0.068
+  #   1e-3       0.8267            0.666
+  #   3e-3       2.0122            1.930   (does not settle in 120 s)
+  #   1e-2       3.1310            5.841   (does not settle in 120 s)
+  # -- shows overshoot growing with ki/k from the very first nonzero value
+  # tried, because the integral state winds up during the fast transient and
+  # pushes back on the way down. Exactly the same mechanism pid_example.yaml's
+  # own tuning history records for the PID case. So: no integral action while
+  # actively slewing; switch it on once settled. This is ordinary gain
+  # scheduling between manoeuvre and fine-pointing phase, not a limitation of
+  # the eigenaxis law itself.
+  #
+  #   u_max: 4.0e-3                   # per-axis clip before wheel allocation

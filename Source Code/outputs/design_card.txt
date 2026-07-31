@@ -1,0 +1,64 @@
+==========================================================================
+CONTROLLER DESIGN CARD - pd_baseline
+==========================================================================
+
+PLANT
+  inertia tensor J [kg m^2] (CoM-referenced):
+    [ 1.401000e-02   1.598000e-07   3.200000e-11]
+    [ 1.598000e-07   1.413000e-02   3.100000e-11]
+    [ 3.200000e-11   3.100000e-11   2.938000e-03]
+  principal moments diag(J) : [0.01401  0.01413  0.002938]
+  max |off-diagonal| / min diag : 5.44e-05 (diagonal-dominant)
+  off-diagonal/diag ratio = 1.12e-05 is under the 1% threshold => design()'s diag(J)-only fit (mortensen, near_eigenaxis) is justified for this J.
+
+ACTUATORS
+  ReactionWheelArray(N=3, Iw=5.80e-06 kg m^2, max_torque=4.00e-03 N m, max_speed=1256.6 rad/s)
+  max deliverable body torque per axis [N m]: [0.0057 0.0049 0.0069]
+    (= max_torque / |W^+ n|_inf, i.e. the real actuator ceiling,
+     not N x the per-wheel limit)
+
+CONTROL LAW - Wie, Weiss & Arapostathis (1989), Sec. III
+  u = mu*(omega x J*omega) - D*omega - sgn(q_e0)*K*q_ev
+  case  : near_eigenaxis
+  design: zeta = 1.0, t_settle = 8.0 s -> omega_n = 8/(zeta*t_s) = 1.0000 rad/s
+  mu    : 0.0
+  K [N m]:
+    [ 1.378701e-02   7.653793e-07   3.135690e-11]
+    [ 7.653793e-07   1.436176e-02   3.164339e-11]
+    [ 3.135690e-11   3.164339e-11   2.938107e-03]
+  D [N m s]:
+    [ 2.802000e-02   3.196000e-07   6.400000e-11]
+    [ 3.196000e-07   2.826000e-02   6.200000e-11]
+    [ 6.400000e-11   6.200000e-11   5.876000e-03]
+  Ki    : none (base case, per the original proof)
+  u_max : none (allocator clip only)
+
+GLOBAL STABILITY: NOT ESTABLISHED (alpha < 0)
+  mu = 0: requires K^-1 = alpha*J + beta*I with alpha, beta >= 0.
+        fitted alpha = -2.418923e+04
+        fitted beta  = +4.114232e+02
+        relative residual |K^-1 - (alpha*J + beta*I)| = 3.78e-16
+        K^-1 is exactly in span{J, I} (residual at machine
+        precision) but alpha < 0, so it falls outside the
+        alpha, beta >= 0 cone the Sec. III proof requires.
+        Note this is structural, not a tuning artifact: the
+        least-squares fit in design() matches 1/J_i against
+        a*J_i + b, and 1/J_i is decreasing in J_i, so the
+        slope is negative for ANY J with distinct moments --
+        including the paper's own Sec. VI example.
+        K = K^T > 0 still holds, so this is 'unproven by this
+        route', NOT 'shown unstable'. Verify convergence
+        empirically and say so explicitly in the report.
+
+LINEARIZED CLOSED LOOP (per body axis)
+            omega_n [rad/s]    zeta      t_settle = 8/(zeta*omega_n) [s]
+    x             0.7015      1.4256            8.00
+    y             0.7129      1.4028            8.00
+    z             0.7071      1.4142            8.00
+
+TORQUE BUDGET AT t = 0 (largest error => largest demand)
+  initial attitude error   : 50.27 deg
+  commanded u(0)     [N m] : [-0.0037 -0.0044 -0.0003]
+  per-wheel g(0)     [N m] : [ 0.0038  0.001  -0.004 ]
+  worst wheel demand / limit : 1.06x (WILL SATURATE at t=0)
+==========================================================================

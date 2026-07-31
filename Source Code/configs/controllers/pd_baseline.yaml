@@ -1,0 +1,10 @@
+# Rescaled 2026-07 for the 3U CAD inertia tensor (constants.py): each axis's
+# Kp/Kd multiplied by J_new_i/J_old_i = [2.5732, 2.4416, 3.4581]. This keeps
+# the per-axis linearized closed loop (omega_n, zeta) exactly where it was
+# tuned -- J*e_ddot = -Kd*e_dot - Kp*e, so gains proportional to J leave the
+# normalized dynamics unchanged. Re-run `deimos tune` / overnight_tune.py to
+# refresh the Pareto-optimal sets against the new plant.
+controller:
+  type: PD
+  Kp: [2.058530, 1.953291, 2.766508]     # diagonal entries of the 3x3 Kp matrix
+  Kd: [0.064329, 0.061040, 0.096828]     # diagonal entries of the 3x3 Kd matrix

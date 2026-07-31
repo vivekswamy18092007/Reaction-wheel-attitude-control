@@ -1,0 +1,76 @@
+%% DEIMoS -- Level 1: The closed loop (the Simulink equivalent)
+%% Executed once per dt = 0.01 s step.
+%% Solid = forward path. Dashed amber = state feedback (from the TRUE
+%% simulator state -- no sensor model, no estimator; see deimos_architecture.html's
+%% "Scope note" for what that excludes).
+%% Kept in sync with deimos_architecture.html's Level 1 SVG -- same signals,
+%% same four feedback paths (q, omega, Omega, h_w). Update both together.
+flowchart LR
+
+    qtarget["<b>q_target</b><br/>(4,) wxyz"]
+    qerr["<b>quaternion_error</b><br/>qₑ = q_t⁻¹ ⊗ q<br/>safe_sign · unwind"]
+    ctrl["<b>Controller</b><br/>compute_torque()<br/>u = −Kp·qₑᵥ − Kd·ω<br/>&nbsp;&nbsp;&nbsp;− Ki·∫qₑᵥ dt<br/>clip(±u_max)"]
+    alloc["<b>wheels.allocate()</b><br/>g = −W⁺ · u_cmd<br/>clip(±4e−3 N·m)<br/>→ g, sat_mask<br/>ZOH for whole step"]
+    bodytorque["<b>body_torque()</b><br/>τ_body = −W·g<br/>(3,) N·m"]
+    dist["<b>disturbance</b><br/>τ_ext — gravity grad."]
+    sigma((Σ))
+    dyn["<b>RotationalDynamics</b><br/>.omega_dot()<br/>ω̇ = J⁻¹[τ − ω×(Jω + h_w)]<br/>Euler + gyroscopic coupling"]
+    wheelaccel["<b>wheel_accel()</b><br/>Ω̇ = g / I_w<br/>I_w = 5.8e−6 kg·m²"]
+    momentum["<b>momentum()</b><br/>h_w = W·(I_w·Ω)<br/>(3,) N·m·s"]
+    mtq["<b>MagnetorquerArray</b><br/>desat_dipole(h_w, B)<br/>m = clip(k·h_w×B / |B|², ±m_max)<br/>hysteresis latch on |h_w|"]
+    bfield["<b>magnetic_field_body()</b><br/>dynamics/environment.py<br/>tilted-dipole model, rotated<br/>into the body frame via q"]
+    rk4["<b>AttitudeSimulator.step()</b> — RK4 integrator (g held ZOH across all 4 sub-stages)<br/>k₁…k₄ = _state_derivative(q, ω, Ω, g, τ_ext) · x ← x + (dt/6)(k₁ + 2k₂ + 2k₃ + k₄)<br/>q ← q / ‖q‖ (renormalise every step — prevents drift off the unit sphere)<br/>QuaternionKinematics.quaternion_dot(): q̇ = ½ q ⊗ [0, ω]"]
+    state["<b>state @ t+dt</b><br/>q (4,)&nbsp;&nbsp;&nbsp;ω (3,)&nbsp;&nbsp;&nbsp;Ω (3,)<br/>logged: t, q, ω, Ω, u, g, m, τ_mtq"]
+
+    qtarget --> qerr
+    qerr -->|"qₑᵥ (3,)"| ctrl
+    ctrl -->|"u_cmd (3,)"| alloc
+    alloc -->|"g (3,)"| bodytorque
+    bodytorque --> sigma
+    dist --> sigma
+    bfield -->|"B (3,)"| mtq
+    momentum -->|"h_w"| mtq
+    mtq -->|"m x B = τ_mtq"| sigma
+    sigma -->|"τ_total"| dyn
+    alloc --> wheelaccel
+    momentum -->|"h_w"| dyn
+    wheelaccel -->|"Ω̇"| rk4
+    dyn -->|"ω̇"| rk4
+    rk4 --> state
+
+    state -.->|"q → error junction"| qerr
+    state -.->|"ω → rate damping"| ctrl
+    state -.->|"Ω → h_w"| momentum
+    state -.->|"q → field rotation"| bfield
+
+    classDef io fill:#2a2416,stroke:#ffb84b,stroke-width:1.5px,color:#e6e6e6;
+    classDef ctrlClass fill:#241a1a,stroke:#ff4b4b,stroke-width:1.5px,color:#e6e6e6;
+    classDef act fill:#1a2418,stroke:#4bff7a,stroke-width:1.5px,color:#e6e6e6;
+    classDef dynClass fill:#181f2b,stroke:#4b9bff,stroke-width:1.5px,color:#e6e6e6;
+    classDef blk fill:#1b2430,stroke:#3f7cac,stroke-width:1.5px,color:#e6e6e6;
+
+    class qtarget,dist,state io
+    class ctrl ctrlClass
+    class alloc,bodytorque,wheelaccel,momentum,mtq act
+    class dyn,rk4 dynClass
+    class qerr,sigma,bfield blk
+
+    linkStyle 0 stroke:#3f7cac,stroke-width:1.6px
+    linkStyle 1 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 2 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 3 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 4 stroke:#3f7cac,stroke-width:1.6px
+    linkStyle 5 stroke:#3f7cac,stroke-width:1.6px
+    linkStyle 6 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 7 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 8 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 9 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 10 stroke:#3f7cac,stroke-width:1.6px
+    linkStyle 11 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 12 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 13 stroke:#3f7cac,stroke-width:1.6px,color:#4bffe6
+    linkStyle 14 stroke:#3f7cac,stroke-width:1.6px
+    linkStyle 15 stroke:#ffb84b,stroke-width:1.5px,stroke-dasharray:5 4,color:#ffb84b
+    linkStyle 16 stroke:#ffb84b,stroke-width:1.5px,stroke-dasharray:5 4,color:#ffb84b
+    linkStyle 17 stroke:#ffb84b,stroke-width:1.5px,stroke-dasharray:5 4,color:#ffb84b
+    linkStyle 18 stroke:#ffb84b,stroke-width:1.5px,stroke-dasharray:5 4,color:#ffb84b

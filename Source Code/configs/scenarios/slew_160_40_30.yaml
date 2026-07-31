@@ -1,0 +1,23 @@
+# A genuinely large ~152 deg net-rotation slew (160/40/30 deg roll/pitch/yaw),
+# added 2026-07 so the GA tuning scenarios actually cover the regime
+# monte_carlo_verify.py exercises (90-179 deg random axis-angle slews) --
+# without this, a search over only slew_40_30_25 (~50 deg) and
+# slew_55_65_15 (~86 deg) has no signal at all about how a candidate behaves
+# on a slew twice that size, and generalizes poorly (measured: the PID front
+# tuned on the two smaller scenarios only settled 82% of a 90-179 deg random
+# batch, averaging 77s to settle vs the Wie eigenaxis law's 19s on the same
+# batch -- most of that gap is scenario coverage, not gain quality).
+#
+# 160/40/30 was picked over a single-axis rotation of the same magnitude
+# specifically to keep all three axes exercised, matching the style of the
+# other two scenarios.
+
+initial:
+  attitude_rpy_deg: [160.0, 40.0, 30.0]
+  omega: [0.0, 0.0, 0.0]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+sim:
+  duration: 60.0

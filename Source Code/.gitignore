@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+runs/*
+!runs/.gitkeep
+
+# GA checkpoints/outputs -- regenerable, tuned against whichever tensor was
+# live at the time; keep them local
+results/
+tests/GArun1 results/

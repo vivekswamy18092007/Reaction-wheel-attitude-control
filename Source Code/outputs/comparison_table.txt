@@ -1,0 +1,7 @@
+run                             settle(s)  final(deg)  oversh(deg)  peak|u|(Nm)   sat(%)  effort(Nms)   energy(J)  eigax(deg)                          stability
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wie eigenaxis (ts=2.99)              2.55      0.0000        0.000    8.281e-02     0.83   8.1086e-02  1.1356e+01       22.66                         GUARANTEED
+Wie near_eigenaxis (ts=0.53)       237.40      0.3548        0.000    5.800e-03     0.00   3.8322e-04  6.8669e-03        1.40        NOT ESTABLISHED (alpha < 0)
+Wie robust (ts=80.13)               38.88      0.0000        0.000    8.468e-03     0.83   6.1305e-02  2.3514e+01       47.41                         GUARANTEED
+Wie mortensen (ts=1119.41)          never     79.1374       79.352    2.169e-02    57.13   2.3522e+00  7.3627e+02       68.86  NOT GUARANTEED (K unmatched to J)
+PD (ts=2.99)                         2.55      0.0000        0.000    8.281e-02     0.83   8.1266e-02  1.1322e+01       23.60                   not claimed (PD)

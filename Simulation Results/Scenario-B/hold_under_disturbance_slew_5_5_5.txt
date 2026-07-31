@@ -1,0 +1,69 @@
+PLANT
+  inertia tensor J [kg m^2] (CoM-referenced):
+    [ 3.605000e-02  -1.306888e-05  -2.074916e-05]
+    [-1.306888e-05   3.450000e-02   5.884415e-05]
+    [-2.074916e-05   5.884415e-05   1.016000e-02]
+  principal moments diag(J) : [0.03605 0.0345  0.01016]
+  max |off-diagonal| / min diag : 5.79e-03 (diagonal-dominant)
+  off-diagonal/diag ratio = 1.77e-03 is under the 1% threshold => design()'s diag(J)-only fit (mortensen, near_eigenaxis) is justified for this J.
+
+ACTUATORS
+  ReactionWheelArray(N=3, Iw=5.80e-06 kg m^2, max_torque=4.00e-03 N m, max_speed=1256.6 rad/s)
+  max deliverable body torque per axis [N m]: [0.0057 0.0049 0.0069]
+    (= max_torque / |W^+ n|_inf, i.e. the real actuator ceiling,
+     not N x the per-wheel limit)
+
+CONTROL LAW - Wie, Weiss & Arapostathis (1989), Sec. III
+  u = mu*(omega x J*omega) - D*omega - sgn(q_e0)*K*q_ev
+  case  : eigenaxis
+  design: zeta = 1.0, t_settle = 30.0 s -> omega_n = 8/(zeta*t_s) = 0.2667 rad/s
+  mu    : 1.0
+  K [N m]:
+    [ 5.127111e-03  -1.858685e-06  -2.950991e-06]
+    [-1.858685e-06   4.906667e-03   8.368946e-06]
+    [-2.950991e-06   8.368946e-06   1.444978e-03]
+  D [N m s]:
+    [ 1.922667e-02  -6.970067e-06  -1.106622e-05]
+    [-6.970067e-06   1.840000e-02   3.138355e-05]
+    [-1.106622e-05   3.138355e-05   5.418667e-03]
+  Ki    : [4.158728e-06 3.808800e-06 3.303219e-07]
+  u_max : none (allocator clip only)
+
+GLOBAL STABILITY: GUARANTEED
+  mu = 1: gyroscopic term cancelled in closed loop; any K = K^T > 0, D = D^T > 0 suffices.
+  NOTE: integral action is active. It is a heuristic augmentation
+        and is NOT covered by the Sec. III proof above.
+
+LINEARIZED CLOSED LOOP (per body axis)
+            omega_n [rad/s]    zeta      t_settle = 8/(zeta*omega_n) [s]
+    x             0.2667      1.0000           30.00
+    y             0.2667      1.0000           30.00
+    z             0.2667      1.0000           30.00
+
+TORQUE BUDGET AT t = 0 (largest error => largest demand)
+  initial attitude error   : 8.53 deg
+  commanded u(0)     [N m] : [-2.1326e-04 -2.2322e-04 -6.0420e-05]
+  per-wheel g(0)     [N m] : [ 2.1714e-04  9.4555e-05 -2.0704e-04]
+  worst wheel demand / limit : 0.05x (within envelope)
+==========================================================================
+--- manual ---
+  POINTING
+    initial attitude error: 8.53 deg
+    settling time (<1 deg): 13.74 s
+    final attitude error  : 0.0342 deg
+    overshoot             : 0.021 deg
+    final |omega|         : 4.736e-07 rad/s
+    mean eigenaxis dev.   : 0.29 deg
+  ACTUATOR AUTHORITY
+    peak |u| commanded    : 3.146e-04 N m
+    peak wheel torque     : 2.171e-04 N m (5.4% of 4.0e-03 limit)
+    torque saturation     : 0.00% of steps
+    speed saturation      : 0.00% of steps
+    max wheel speed       : 51.83 rad/s (495 rpm)
+  COST
+    control effort int|u| : 8.8407e-04 N m s
+    electrical energy     : 3.2796e-02 J
+  VERIFICATION
+    max |total momentum|  : 1.977517e-05 kg m^2/s
+    total momentum drift  : 1.978e-05 kg m^2/s
+    max |q| drift         : 1.110e-16

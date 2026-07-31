@@ -1,0 +1,28 @@
+# Case 3 of Wie/Weiss/Arapostathis (1989)'s design example: K^-1 = alpha*J +
+# beta*I fitted by least squares, mu = 0 ("near_eigenaxis"). This is the
+# globally-stable *and* near-minimum-path combination -- it keeps the mu=0
+# robustness to inertia error without giving up as much of the eigenaxis
+# property as the "robust" (K = k*I) case.
+#
+# K, D and mu are NOT listed here. They are derived from satellite.inertia_tensor
+# by WieRegulator.design() at build time, because the mu=0 stability proof only
+# holds for a K matched to J. Hand-setting K in a preset would silently void it.
+
+controller:
+  type: wie
+  case: near_eigenaxis           # eigenaxis | robust | mortensen | near_eigenaxis
+  zeta: 1.0                      # critically damped
+  settling_time_s: 8.0
+  # NOTE on settling_time_s for this case: design() scales D by
+  # d = 2*zeta*omega_n but builds K purely from the alpha/beta fit, so K's
+  # magnitude is set by J alone and does not follow settling_time_s. With the
+  # 3U CAD tensor the fit pins the closed-loop omega_n near 0.7 rad/s with
+  # zeta ~ 1.4 (measured 2026-07: settles slew_40_30_25 in 14.6 s, brief 2.6%
+  # torque saturation at the start). 8 s is the value that keeps D consistent
+  # with the K you actually get; raising it under-damps the response rather
+  # than slowing it down.
+
+  # Ki and u_max are deliberately absent -- the base case is plain mu/K/D per
+  # Wie's original global-stability proof. Both are opt-in:
+  #   Ki: [1.0e-4, 1.0e-4, 1.0e-4]   # heuristic, outside the Sec. III proof
+  #   u_max: 4.0e-3                   # per-axis clip before wheel allocation

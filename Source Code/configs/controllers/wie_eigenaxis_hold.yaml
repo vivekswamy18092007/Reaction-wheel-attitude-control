@@ -1,0 +1,33 @@
+# Fine-pointing / disturbance-hold sibling of wie_eigenaxis.yaml.
+#
+# Same K = k*J, D = d*J (zeta = 1.0, t_s = 20 s) as the slew preset, with
+# integral action added: Ki = ki*diag(J), ki/k = 0.01. Kept proportional to J
+# for the same reason K and D are -- an integral term that is not a scalar
+# multiple of J reintroduces per-axis asymmetry, and the eigenaxis property
+# degrades exactly as it does for a non-proportional Kp (see the report's
+# Sec. "Why there is no axis-asymmetry term").
+#
+# This is a heuristic augmentation of the paper's law: Sec. III's Lyapunov
+# proof does not cover the integral state, so no global-stability claim is
+# made for this preset. Validated numerically instead, against the
+# deliberately inflated 3 uN m/axis bias of hold_under_disturbance.yaml: cuts
+# the steady-state offset from 0.114 deg (no integral action) to 0.032 deg at
+# t=240s, and to numerical zero by t=1200s, with zero torque saturation
+# throughout and residual body rate falling to 2.3e-10 rad/s.
+#
+# NOT the preset to warm-start a slew or to use during an active manoeuvre --
+# see wie_eigenaxis.yaml's own comment for the measured overshoot cost of
+# integral action during a fast transient. Use this one only once the error
+# is already small (post-slew hold, or a scenario with no large-angle content
+# at all, like hold_under_disturbance.yaml).
+
+controller:
+  type: wie
+  case: eigenaxis
+  decouple_wheel_momentum: true
+  zeta: 1.0
+  settling_time_s: 20.0
+
+  Ki: [1.1536e-04, 1.1040e-04, 3.2512e-05]   # = ki*diag(J), ki = 0.01*k = 3.2e-3
+  integral_limit: 1.0e-3                      # anti-windup cap on |Ki*z|, [N m]
+  #   u_max: 4.0e-3                   # per-axis clip before wheel allocation

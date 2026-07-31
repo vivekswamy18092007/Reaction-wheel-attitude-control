@@ -1,0 +1,67 @@
+# Gains are typed directly here (Kp, Kd, Ki) -- no design()/zeta/settling_time
+# derivation for this controller type.
+#
+# 2026-07-31: history --
+#   (a) previous NSGA-II "best_tracking" pick (this file's Kp/Kd/Ki, see git
+#       history) settled slew_40_30_25/slew_55_65_15 in 34.1s/47.7s.
+#   (b) uniformly scaled Kp/Kd/Ki x3 (same ratios) for a <20s settling
+#       target: 16.13s/17.99s, but SSE was UNCHANGED (0.43/0.70 deg) --
+#       uniform scaling preserves the Ki/Kp ratio, and that ratio, not the
+#       overall bandwidth, is what sets the disturbance-washout time
+#       constant. Confirmed by running one case out to 300s: the error was
+#       still slowly decaying (0.70 -> 0.45 deg), not plateaued -- Ki was
+#       working, just slowly, regardless of how (a) was scaled.
+#   (c) tried to speed that washout up directly: MORE Ki (holding Kp/Kd
+#       fixed) made SSE *worse* and broke settling above ~2x -- a slow
+#       growing oscillation, not a windup/anti-windup issue (integral_limit
+#       had zero effect either way). MORE Kd on top of that made both worse
+#       again. Conclusion: this Kp:Kd:Ki ratio is a real local optimum: any
+#       hand perturbation of Ki or Kd alone, in either direction, degrades
+#       both SSE and settling together.
+#   (d) what actually worked: Kp ALONE, holding (b)'s Kd/Ki fixed. Raising
+#       Kp raises loop stiffness against the disturbance directly (shrinks
+#       the residual Ki has to work down from), and empirically settling
+#       time held or improved alongside it -- unlike scaling Ki or Kd, this
+#       direction does not fight the closed loop. Landed on Kp x3 (on top of
+#       (b)'s value, so x9 versus (a)) after Kp x2.5 showed an overshoot
+#       spike (0.57/0.68 deg, vs 0.19/0.20 at x2 and 0.01/0.23 at x3) --
+#       non-monotonic, some part of the search space to avoid rather than a
+#       trend to chase further.
+#
+#   (e) 2026-07-31, later same day: Kd from (d) was never actually set to a
+#       particular zeta -- it just carried over unscaled from (b). Set Kd
+#       properly for zeta=1 (critically damped) on all three axes from the
+#       linearized per-axis closed loop, J*theta_ddot + Kd*theta_dot +
+#       (Kp/2)*theta = 0 (small-angle q_ev = theta/2), which gives
+#       omega_n = sqrt(Kp/(2J)) and Kd = zeta*sqrt(2*J*Kp) -- same gain map
+#       as WieRegulator.design() uses for K/D, applied here to Kp/Kd instead
+#       of deriving Kp too, since (d)'s Kp is what the SSE work above tuned.
+#       This was not just a formal target: it turned out to be a genuine
+#       improvement over (d), not merely a different tradeoff -- settling
+#       got FASTER on all three scenarios (not slower, as more damping
+#       naively suggests) and overshoot dropped sharply, because (d)'s Kd
+#       was actually somewhat UNDER the critical value for the new, larger
+#       Kp (verified: Kd/sqrt(2*J*Kp) = 1.0 exactly per axis after this
+#       change, vs a lower ratio before).
+#
+# Current (Kp unchanged from (d), Kd set for zeta=1, Ki unchanged from (b)),
+# 60-120s + gravity-gradient, matching how the GA scores candidates:
+#   slew_40_30_25  : settle 11.62s (was 16.01s), sse 0.088 deg, overshoot 0.03 deg, sat 1.3%
+#   slew_55_65_15  : settle 13.23s (was 18.17s), sse 0.144 deg, overshoot 0.04 deg, sat 1.5%
+#   slew_160_40_30 : settle 17.15s (was 22.58s), sse 0.323 deg, overshoot 0.20 deg, sat 1.5%
+# All three scenarios, including the 152 deg one, now settle under 20s with
+# essentially no overshoot. SSE is comparable to (d) on the two standard
+# scenarios and similar on the large one; the overshoot reduction on
+# slew_160_40_30 (1.24 deg -> 0.20 deg) is the more significant change there.
+controller:
+  type: PID                      # distinct from "PD" -- control/pid.py, Ki required
+  Kp: [1.770103e-02, 9.816174e-02, 2.538090e-02]
+  Kd: [3.572456e-02, 8.229921e-02, 2.270991e-02]
+  Ki: [7.343430e-06, 7.196409e-05, 1.072715e-05]
+
+  # Anti-windup: caps the integral term's contribution at 25% of the 4e-3 N m
+  # per-wheel limit. Without it the accumulator integrates the entire slew
+  # transient unbounded -- that is the mechanism behind the limit cycle noted
+  # above, and `deimos tune --type PID` enables this by default for the same
+  # reason. Comment it out to reproduce the original unbounded behaviour.
+  integral_limit: 1.0e-3

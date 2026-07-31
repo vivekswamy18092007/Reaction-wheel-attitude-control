@@ -1,0 +1,14 @@
+# A ~55/65/15 deg roll/pitch/yaw slew from rest to the identity attitude.
+
+
+initial:
+  # Roll/pitch/yaw in degrees about the body axes (converted to a quaternion
+  # via euler_to_quaternion, then normalized)
+  attitude_rpy_deg: [55.0, 65.0, 15.0]
+  omega: [0.0, 0.0, 0.0]
+
+target:
+  attitude_rpy_deg: [0.0, 0.0, 0.0]
+
+sim:
+  duration: 60.0                 
